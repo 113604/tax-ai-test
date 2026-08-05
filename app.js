@@ -555,7 +555,7 @@ function escapeLearningHtml(value) {
       event.preventDefault();
       const question=(aiInput?.value||'').trim();
       if(question.length<2){ toast('請輸入完整問題'); return; }
-      renderDemoRagAnswer(question);
+      renderRealRagAnswer(question);
     });
 
     // 從首頁搜尋進入智慧搜尋時，預設停在快速搜尋頁籤。
