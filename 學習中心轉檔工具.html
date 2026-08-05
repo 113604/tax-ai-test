@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tax AI｜學習中心轉檔工具</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;font-family:"Microsoft JhengHei",Arial,sans-serif;background:#f3f7fb;color:#18324a}
+    main{width:min(760px,calc(100% - 32px));margin:70px auto;background:#fff;border:1px solid #d8e5f0;border-radius:24px;padding:38px;box-shadow:0 18px 50px rgba(31,75,109,.1)}
+    h1{margin:0 0 10px;color:#0f6cbd}p{color:#63788a;line-height:1.8}.drop{margin:28px 0;padding:35px;border:2px dashed #9ec6e5;border-radius:18px;text-align:center;background:#f7fbff}
+    input{display:none}button{border:0;border-radius:12px;padding:13px 18px;background:#0f6cbd;color:#fff;font-weight:700;cursor:pointer;font-size:16px}
+    button:disabled{background:#9cb4c8;cursor:not-allowed}.actions{display:flex;gap:12px;flex-wrap:wrap}.secondary{background:#526b7e}
+    #status{margin-top:20px;padding:14px;border-radius:12px;background:#eef6fc;color:#315c7b;white-space:pre-line}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>學習中心 Excel 轉檔</h1>
+    <p>選擇「Tax_AI_學習中心管理.xlsx」，工具會產生可供電腦直接開啟版使用的 <b>learningBank.js</b>。</p>
+    <div class="drop">
+      <input id="excelFile" type="file" accept=".xlsx,.xls">
+      <button id="chooseButton">選擇學習中心 Excel</button>
+      <p id="fileName">尚未選擇檔案</p>
+    </div>
+    <div class="actions">
+      <button id="downloadJs" disabled>下載網站更新檔 learningBank.js</button>
+    </div>
+    <div id="status">請先選擇 Excel 檔案。</div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    const input=document.querySelector("#excelFile");
+    const chooseButton=document.querySelector("#chooseButton");
+    const downloadJs=document.querySelector("#downloadJs");
+    const fileName=document.querySelector("#fileName");
+    const status=document.querySelector("#status");
+    let convertedData=null;
+
+    chooseButton.onclick=()=>input.click();
+    input.onchange=async()=>{
+      const file=input.files&&input.files[0];
+      if(!file)return;
+      fileName.textContent=file.name;
+      try{
+        if(typeof XLSX==="undefined")throw new Error("轉檔元件載入失敗，請確認網路連線");
+        const workbook=XLSX.read(await file.arrayBuffer(),{type:"array"});
+        const sheetName=workbook.SheetNames.includes("學習中心")?"學習中心":workbook.SheetNames[0];
+        const rows=XLSX.utils.sheet_to_json(workbook.Sheets[sheetName],{defval:""});
+        const items=rows.map(convertRow).filter(Boolean).sort((a,b)=>a.order-b.order);
+        if(!items.length)throw new Error("找不到「是否顯示」為「是」的學習資料");
+        const featuredItem=items.find(item=>item.position==="今日推薦")||items[0];
+        convertedData={
+          featured:cleanItem(featuredItem),
+          news:items.filter(item=>item.id!==featuredItem.id).map(cleanItem)
+        };
+        downloadJs.disabled=false;
+        status.textContent=`轉換成功！共 ${items.length} 篇，今日推薦為「${featuredItem.title}」。`;
+      }catch(error){
+        convertedData=null;
+        downloadJs.disabled=true;
+        status.textContent=`轉換失敗：${error.message}`;
+      }
+    };
+
+    function convertRow(row,index){
+      const visible=String(row["是否顯示"]||"是").trim();
+      if(["否","不顯示","false","0"].includes(visible.toLowerCase()))return null;
+      const title=String(row["主題標題"]||"").trim();
+      if(!title)return null;
+      const thumbnailName=String(row["縮圖檔名"]||"").trim();
+      const imageName=String(row["AI圖片檔名"]||"").trim();
+      return{
+        id:String(row["編號"]||`L${String(index+1).padStart(3,"0")}`).trim(),
+        position:String(row["顯示位置"]||"最新主題").trim(),
+        order:Number(row["顯示順序"])||index+1,
+        title,
+        category:String(row["業務分類"]||"稅務管理及其他").trim(),
+        date:String(row["更新日期"]||"").trim(),
+        summary:String(row["內容摘要"]||"").trim(),
+        content:["重點1","重點2","重點3"].map(key=>String(row[key]||"").trim()).filter(Boolean),
+        thumbnail:thumbnailName?`assets/${thumbnailName}`:"",
+        image:imageName?`assets/${imageName}`:"",
+        imageAlt:String(row["圖片說明"]||title).trim(),
+        imageCaption:String(row["圖片圖說"]||"").trim()
+      };
+    }
+
+    function cleanItem(item){
+      const result={id:item.id,title:item.title,date:item.date,category:item.category,summary:item.summary,content:item.content};
+      if(item.thumbnail)result.thumbnail=item.thumbnail;
+      if(item.image)result.image=item.image;
+      if(item.imageAlt)result.imageAlt=item.imageAlt;
+      if(item.imageCaption)result.imageCaption=item.imageCaption;
+      return result;
+    }
+
+    function saveFile(name,text,type){
+      const link=document.createElement("a");
+      link.href=URL.createObjectURL(new Blob([text],{type}));
+      link.download=name;
+      link.click();
+      setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+    }
+
+    downloadJs.onclick=()=>{
+      if(!convertedData)return;
+      saveFile("learningBank.js",`window.LEARNING_BANK = ${JSON.stringify(convertedData,null,2)};\n`,"text/javascript");
+    };
+  </script>
+</body>
+</html>

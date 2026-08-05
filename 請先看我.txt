@@ -1,0 +1,16 @@
+【正確更新方式】
+
+一、題庫更新
+1. Excel 轉出 questionBank.js。
+2. 檔名必須完全是 questionBank.js，不可有 (1)、(2)。
+3. 放到 index.html 同一層並取代舊檔。
+
+二、學習中心更新
+1. Excel 轉出 learningBank.js。
+2. 檔名必須完全是 learningBank.js，不可有 (1)、(2)。
+3. 放到 index.html 同一層並取代舊檔。
+4. 圖片放入 assets 資料夾，檔名要與 Excel 相同。
+
+三、測試
+關閉原本所有 Tax AI 分頁，再雙擊 index.html。
+本修正版會優先讀取 questionBank.js 與 learningBank.js，不再讀取瀏覽器舊題庫。
