@@ -62,6 +62,48 @@ window.TaxSearch = (()=>{
     const legal=norm(item.legalBasis);
     const keys=norm((item.keywords||[]).join(''));
     let s=0;
+    const intentRules = [
+  {
+    queries: ['怎麼申請', '如何申請', '怎麼辦理', '申辦方式'],
+    targets: ['申請', '申辦', '辦理', '管道']
+  },
+  {
+    queries: ['要帶什麼', '需要什麼文件', '準備什麼', '要什麼證件'],
+    targets: ['檢附', '文件', '證件', '身分證']
+  },
+  {
+    queries: ['什麼時候', '期限', '幾號以前', '多久'],
+    targets: ['期限', '日內', '以前', '截止']
+  },
+  {
+    queries: ['要繳嗎', '需要繳嗎', '不用繳嗎', '可以免稅嗎'],
+    targets: ['課徵', '免徵', '無須', '不需要繳']
+  },
+  {
+    queries: ['會被罰嗎', '罰多少', '有處罰嗎', '逾期怎麼辦'],
+    targets: ['罰鍰', '滯納金', '怠報金', '處罰']
+  },
+  {
+    queries: ['可以退嗎', '怎麼退稅', '多繳怎麼辦'],
+    targets: ['退稅', '退還', '溢繳']
+  }
+];
+
+const targetText = question + summary + answer + keys;
+
+intentRules.forEach(rule => {
+  const hasIntent = rule.queries.some(word =>
+    full.includes(norm(word))
+  );
+
+  const hasMatchingContent = rule.targets.some(word =>
+    targetText.includes(norm(word))
+  );
+
+  if (hasIntent && hasMatchingContent) {
+    s += 18;
+  }
+});
         // 完整關鍵字優先：例如「財產清單」應優先找到含有該關鍵字的題目
     (item.keywords || []).forEach(keyword => {
       const k = norm(keyword);
