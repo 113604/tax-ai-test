@@ -565,10 +565,40 @@ function escapeLearningHtml(value) {
   });
 
   const TAX_AI_API_URL='https://tax-ai-api.ddy88000000.workers.dev/ask';
+   const TEST_MODE=true;
 
   async function renderRealRagAnswer(question){
     const area=document.querySelector('#aiAnswerArea');
     if(!area)return;
+       if(TEST_MODE){
+    area.innerHTML=`
+      <article class="ai-response-card">
+        <div class="ai-response-head">
+          <div>
+            <span class="eyebrow">TAX AI TEST MODE</span>
+            <h3>✨ 題庫 AI 助理</h3>
+          </div>
+          <span class="ai-response-badge">測試模式</span>
+        </div>
+
+        <div class="ai-response-body">
+          <p>這是測試回答，不會呼叫 Gemini，也不會消耗每日額度。</p>
+          <p>房屋出租不一定會讓房屋稅變貴，須視出租方式及是否符合優惠條件而定。</p>
+        </div>
+
+        <div class="ai-sources">
+          <h4>📚 回答依據（房屋稅）</h4>
+          <div class="ai-source-list">
+            <button type="button" class="ai-source-btn">
+              <span class="ai-source-id">Q008</span>
+              <span class="ai-source-title">閒置房屋轉供出租作住家使用，可否降低房屋稅？</span>
+              <span class="ai-source-cat">房屋稅</span>
+            </button>
+          </div>
+        </div>
+      </article>`;
+    return;
+  }
 
     const results=TaxSearch.search(bank,question,'全部');
     const useful=results.filter(item=>item._score>=8).slice(0,6);
