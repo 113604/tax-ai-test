@@ -158,20 +158,19 @@ intentRules.forEach(rule => {
   // 搜尋完整詞時，優先只顯示真正包含完整詞的題目
   if (full.length >= 4) {
     const exactMatches = scored.filter(item => {
-      const exactText = norm(
-        [
-          item.question,
-          item.summary,
-          item.popularTitle,
-          ...(item.keywords || [])
-        ].join(' ')
-      );
+const exactText = norm(
+  [
+    item.question,
+    item.popularTitle,
+    ...(item.keywords || [])
+  ].join(' ')
+);
 
       return exactText.includes(full);
     });
 
     if (exactMatches.length > 0) {
-      return exactMatches;
+      return exactMatches.slice(0, 5);
     }
   }
 
