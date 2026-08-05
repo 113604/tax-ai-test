@@ -132,11 +132,51 @@ intentRules.forEach(rule => {
     return s;
   }
 
-  function search(bank,q,category='全部'){
-    const filtered=category==='全部'?bank:bank.filter(x=>x.category===category);
-    if(!q.trim()) return filtered.map(x=>({...x,_score:0}));
-    return filtered.map(x=>({...x,_score:score(x,q)})).filter(x=>x._score>0).sort((a,b)=>b._score-a._score||a.id-b.id);
+  function search(bank, q, category = '全部') {
+  const filtered =
+    category === '全部'
+      ? bank
+      : bank.filter(x => x.category === category);
+
+  if (!q.trim()) {
+    return filtered.map(x => ({
+      ...x,
+      _score: 0
+    }));
   }
+
+  const full = norm(q);
+
+  const scored = filtered
+    .map(x => ({
+      ...x,
+      _score: score(x, q)
+    }))
+    .filter(x => x._score > 0)
+    .sort((a, b) => b._score - a._score || a.id - b.id);
+
+  // 搜尋完整詞時，優先只顯示真正包含完整詞的題目
+  if (full.length >= 4) {
+    const exactMatches = scored.filter(item => {
+      const exactText = norm(
+        [
+          item.question,
+          item.summary,
+          item.popularTitle,
+          ...(item.keywords || [])
+        ].join(' ')
+      );
+
+      return exactText.includes(full);
+    });
+
+    if (exactMatches.length > 0) {
+      return exactMatches;
+    }
+  }
+
+  return scored;
+}
 
   return{search,norm,splitTerms};
 })();
