@@ -565,7 +565,7 @@ function escapeLearningHtml(value) {
   });
 
   const TAX_AI_API_URL='https://tax-ai-api.ddy88000000.workers.dev/ask';
-   const TEST_MODE=true;
+   const TEST_MODE=false;
 
   async function renderRealRagAnswer(question){
     const area=document.querySelector('#aiAnswerArea');
