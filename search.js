@@ -52,6 +52,20 @@ window.TaxSearch = (()=>{
     const legal=norm(item.legalBasis);
     const keys=norm((item.keywords||[]).join(''));
     let s=0;
+        // 完整關鍵字優先：例如「財產清單」應優先找到含有該關鍵字的題目
+    (item.keywords || []).forEach(keyword => {
+      const k = norm(keyword);
+
+      if (!k || k.length < 2) return;
+
+      if (full.includes(k)) {
+        s += k.length >= 4 ? 150 : 60;
+      }
+
+      if (k.includes(full) && full.length >= 2) {
+        s += 80;
+      }
+    });
 
     terms.forEach(t=>{
       if(question.includes(t)) s+=t.length>=4?28:12;
